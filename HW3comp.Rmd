@@ -1,0 +1,44 @@
+---
+title: "HW3comp"
+author: "Gillian Cheng"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+## Ex 13
+Please find out all prime numbers from 2 to 100.
+(Please use “while” to build a “do...until...loop”)
+
+```{r}
+
+num <- 2:100
+i <- 1
+obs <- 1
+prime <- c()
+done <- FALSE
+
+while (!done) {
+  n <- num[i]
+  factors <- integer(0)  # blank
+  
+  for (d in 1:n) {
+    if (n %% d == 0) {
+      factors <- c(factors, d)  # factorize the number first
+    }
+  }
+
+  if (length(factors) == 2) {
+    prime[obs] <- n  # prime number if there's only 2 factors
+    obs <- obs + 1
+  }
+
+  i <- i + 1
+  
+  if (i > length(num)) {
+    done <- TRUE 
+  }
+}
+prime
+
+```

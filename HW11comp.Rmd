@@ -1,0 +1,84 @@
+---
+title: "HW11comp"
+author: "Gillian Cheng"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+
+```{r}
+newtonraphson <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+        x <- x0        # x0: the initial value
+        fx <- ftn(x)
+        iter <- 0
+        while ((max(abs(fx[[1]])) > tol) & (iter < max.iter)) {
+                x <- x - solve(fx[[2]]) %*% fx[[1]]
+                fx <- ftn(x)
+                iter <- iter + 1
+        }
+        if (max(abs(fx[[1]])) > tol) {
+                # cat('Algorithm failed to converge\n')
+                return(NULL)
+        } else {     # max(abs(fx[[1]])) <= tol
+                # cat("Algorithm converged\n")
+                return(x)
+        }
+}
+```
+
+```{r}
+knitr::include_graphics("week11.png")
+```
+
+
+```{r}
+n <- 30
+no.rep <- 100
+betacoef1 <- c(-6, 1, 0.005)
+MLE <- matrix(NA,no.rep,3) #us
+size <- c(30, 230, 430, 630)
+
+for (k in 1:4){
+        n <- size[k]
+        for (i in 1:no.rep) {
+                set.seed(i)
+                # Generate gpa and gre scores for n subjects
+                gpa <- rnorm(n, 3.1, 0.3)
+                gre <- rnorm(n, 580, 80)
+                pii <- exp(betacoef1[1] + betacoef1[2] * gpa + betacoef1[3] * gre) /
+                        (1 + exp(betacoef1[1] + betacoef1[2] * gpa + betacoef1[3] * gre))
+                Y <- numeric(n)
+                for (j in 1:n) {
+                        Y[j] <- sample(c(0, 1), 1, replace = TRUE, prob = c(1 - pii[j], pii[j]))
+                }
+                
+                X <- cbind(rep(1,length(Y)),gpa,gre)
+                
+                # model <- glm(Y ~ gpa + gre, family = binomial(link = "logit"))
+                # MLElm[i,] <- coef(model)
+                ftn <- function(betacoef){
+                        pi1 <- exp(X%*%betacoef)/(1+exp(X%*%betacoef))
+                        gradient <- t(X)%*%(Y-pi1)
+                        hessian <- -t(X)%*%diag(c(pi1*(1-pi1)),length(Y))%*%X
+                        Loglike <- sum(Y*log(pi1/(1-pi1))+log(1-pi1))
+                        return(list(gradient, hessian, Loglike))
+                }
+                MLE[i,] <- t(newtonraphson(ftn, c(0,0,0)))
+        }
+        var_name <- paste0("MLE_", n)
+        assign(var_name, MLE)
+}
+```
+
+```{r}
+par(mfrow = c(3,1),mar = c(2,2,1,1))
+boxplot(MLE_30[,1], MLE_230[,1], MLE_430[,1],MLE_630[,1],
+        names = c("n = 30", "n = 230", "n = 430", "n = 630"))
+abline(h = betacoef1[1],col = 2)
+boxplot(MLE_30[,2], MLE_230[,2], MLE_430[,2],MLE_630[,2],
+        names = c("n = 30", "n = 230", "n = 430", "n = 630"))
+abline(h = betacoef1[2],col = 2)
+boxplot(MLE_30[,3], MLE_230[,3], MLE_430[,3],MLE_630[,3],
+        names = c("n = 30", "n = 230", "n = 430", "n = 630"))
+abline(h = betacoef1[3],col = 2)
+```

@@ -1,0 +1,69 @@
+---
+title: "HW2 for comp in biostat and epi"
+author: "Gillian Cheng"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    df_print: paged
+---
+
+## Ex8
+
+There were 50 students in a class. 
+All odd-numbered students were boys, and all even-numbered students were girls. 
+
+There were 7 students passing the midterm exam: 11,16,23,31,36,47,50. 
+There were 9 students passing the final exam: 3,9,16,20,27,31,36,49,50.
+
+Please use the R commands regarding set operations to answer the following four questions:
+
+```{r}
+even <- function(x){subset(x, x %% 2 == 0)}
+odd <- function(x){subset(x, x %% 2 != 0)}
+
+mid_pass <- c(11,16,23,31,36,47,50)
+final_pass <- c(3,9,16,20,27,31,36,49,50)
+```
+
+(1) Please list the boys who passed both the midterm and final exams
+```{r}
+q1 <- intersect(mid_pass,final_pass)
+odd(q1)
+```
+(2) Please list the girls who passed both the midterm and final exams
+```{r}
+q2 <- intersect(mid_pass,final_pass)
+even(q2)
+```
+(3) Please list the boys who passed the midterm exam but failed the final exam
+```{r}
+q3 <- setdiff(mid_pass,final_pass)
+odd(q3)
+```
+(4) Please list the girls who failed the midterm exam but passed the final exam
+```{r}
+q4 <- setdiff(final_pass, mid_pass)
+even(q4)
+```
+
+## Ex 9
+Please write a function on your own to estimate the regression coefficients of a simple linear regression, where the response variable is “y” from “seizure.csv” (Week 1 course material) and the predictor variable is “lweek” from “seizure.csv”. 
+
+(Hint: the regression coefficients should include an intercept term and a slope term)
+```{r}
+seizure <- read.csv("seizure.csv")
+
+simple_regression <- function(x,y,data){
+        x <- data[[x]]
+        y <- data[[y]]
+        
+        xbar <- mean(x)
+        ybar <- mean(y)
+        beta_hat <- sum((x-xbar)*(y-ybar))/ sum((x-xbar)**2)
+        intercept <- ybar-beta_hat*xbar
+        return(list(beta_hat = beta_hat, intercept = intercept))
+}
+
+simple_regression(x = "lweek",y = "y", data = seizure)
+lm(y ~ lweek, data = seizure)
+```

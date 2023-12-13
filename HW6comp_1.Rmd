@@ -1,0 +1,122 @@
+---
+title: "HW6comp"
+author: "Gillian Cheng"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+  latex_engine: xelatex
+  pdf_document: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = F)
+```
+
+## Newton Raphson function
+
+```{r}
+newtonraphson <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+        x <- x0 # x0: the initial value
+        fx <- ftn(x)
+        iter <- 0
+        while ((abs(fx[1]) > tol) & (iter < max.iter)) {
+                x <- x - fx[1]/fx[2]
+                fx <- ftn(x)
+                iter <- iter + 1
+                cat("At iteration", iter, "value of x is:", x, "\n")
+        }
+        if (abs(fx[1]) > tol) {
+                cat("Algorithm failed to converge\n")
+                return(NULL)
+        } else { # abs(fx[1]) <= tol
+                cat("Algorithm converged\n")
+                return(x)
+        }
+}
+```
+
+# Ex 17-1:
+Consider a class with 100 students, if the probability of passing the final exam is p and we observe 20 students passing the final exam. 
+(1)Please find the 95% exact confidence interval for p.
+(2)Please find the 95% asymptotic confidence interval for p.
+
+
+```{r, echo=FALSE}
+knitr::include_graphics("1.png")
+knitr::include_graphics("2.png")
+```
+
+
+#### let's make plot to find the initial value first!
+```{r, fig.align='center',out.width='75%'}
+par(mfrow = c(1,2))
+p <- seq(0,1,0.01)
+fp <- (-0.975)
+for(i in 0:19){
+        fp <- fp + (choose(100,i)*(p^i)*((1-p)^(100-i)))
+}
+plot(p,fp, type = "l",lwd = 2)
+abline(h = 0, col = "pink", lwd = 4)
+
+p <- seq(0,1,0.01)
+fp <- (-0.025)
+for(i in 0:20){
+        fp <- fp + (choose(100,i)*(p^i)*((1-p)^(100-i)))
+}
+plot(p,fp, type = "l", lwd = 2)
+abline(h = 0, col = "pink", lwd = 4)
+```
+
+decided the intial value for lower bound to be 0.2,and upper bound to be 0.25.
+
+
+#### then write the functions.
+```{r}
+ftn9 <- function(p){
+        fp1 <- (-0.975)
+        dfp1 <- 0
+        for(i in 0:19){
+                fp1 <- fp1 + (choose(100,i)*(p^i)*((1-p)^(100-i)))
+                dfp1 <- dfp1 + choose(100,i)*(i*(p^(i-1))*((1-p)^(100-i))-(p^i)*(100-i)*((1-p)^(99-i)))
+        }
+        return(c(fp1,dfp1))
+}
+
+ftn10 <- function(p){
+        fp2 <- (-0.025)
+        dfp2 <- 0
+        for(i in 0:20){
+                fp2 <- fp2 + (choose(100,i)*(p^i)*((1-p)^(100-i)))
+                dfp2 <- dfp2 + choose(100,i)*(i*(p^(i-1))*((1-p)^(100-i))-(p^i)*(100-i)*((1-p)^(99-i)))
+        }
+        return(c(fp2,dfp2))
+}
+```
+
+#### the values are same from
+```{r}
+newtonraphson(ftn9,0.2,tol = 1e-9,100)
+newtonraphson(ftn10,0.25,tol = 1e-9,100)
+
+library(binom)
+binom.confint(20,100,0.95,"exact")
+```
+
+
+
+#### use the formula and go on to find out the asymptotic confidence interval.
+
+```{r, echo=FALSE, out.width='20%'}
+knitr::include_graphics("Screenshot 2023-11-06 002320.png")
+```
+
+```{r}
+phat <- 20/100
+phat-(qnorm(0.975)*sqrt((phat*(1-phat)/100)))
+phat+(qnorm(0.975)*sqrt((phat*(1-phat)/100)))
+
+library(binom)
+binom.confint(20,100,conf.level = 0.95, methods = "asymptotic")
+```
+

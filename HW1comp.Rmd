@@ -1,0 +1,69 @@
+---
+title: "HW1 for comp in biostat and epi"
+author: "Gillian Cheng"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+header-includes: \usepackage{titling}
+---
+
+
+## Example 2
+
+In regression analysis, if you observe an F test statistic = 3.2 (right-tailed test), and under the null hypothesis this statistic should follow an F distribution with a numerator d.f. of 3 and a denominator d.f. of 194, please find the p-value? Please plot the pdf and cdf of this F distribution.
+
+### P-value
+```{r pval}
+pval <- pf(3.2,3,194, lower.tail = F)
+paste("The p-val of F-stat = 3.2 under df =c(3,194) is",round(pval,4))
+```
+```{r pvalplot,include=FALSE, fig.align='center', fig.width=8, fig.height=4}
+x <- seq(0,5,0.01)
+PDF <- df(x,df1 = 3, df2 = 194)
+par(pty="s")
+plot(PDF, type = "l", col = "pink", lwd = 3, xlab = "F statistics",
+     ylab = "Density function", main = "PDF")
+
+abline(v = 3.2, lwd = 2)
+text(200, 0.1, paste("p-value = ", round(pval,3)))
+```
+
+### PDF & CDF
+```{r PDFCDF,fig.align='center', fig.width=8, fig.height=4}
+x <- seq(0,5,0.01)
+PDF <- df(x,df1 = 3, df2 = 194);CDF <- pf(x,df1 = 3, df2 = 194)
+
+par(pty="s", mfrow=c(1,2))
+
+plot(PDF, type = "l", col = "pink", lwd = 3, ylab = "Density function", main = "PDF")
+plot(CDF, type = "l", col = "pink", lwd = 3, ylab = "Cumulative Probability", main = "CDF")
+```
+
+## Example 3
+
+In regression analysis, if you observe a t test statistic = -2.08 (two-tailed test), and under the null hypothesis this statistic should follow a t distribution with a d.f. of 136, please find the p-value? What's the p-value if you observe a t test statistic = 2.45 (two-tailed test). Please plot the pdf and cdf of this t distribution.
+
+### P-value
+```{r pval2}
+pval1 <- 2 * pt(-2.08, 136)
+pval2 <- 2 * pt(2.45, 136, lower.tail = F)
+```
+```{r out,echo=FALSE}
+paste("The p-val of t-stat = -2.08 under df = 136 is",round(pval1,4))
+paste("The p-val of t-stat = 2.45 under df = 136 is",round(pval2,4))
+```
+
+### PDF & CDF
+```{r PDF CDF2,fig.width=8, fig.height=4}
+x2 <- seq(-3,3,0.01)
+PDF2 <- dt(x2, 136)
+CDF2 <- pt(x2, 136)
+par(pty="s", mfrow=c(1,2))
+
+plot(PDF2, type = "l", col = "steelblue", lwd = 3,
+     ylab = "Density function", main = "PDF")
+
+plot(CDF2, type = "l", col = "steelblue", lwd = 3, 
+     ylab = "Cumulative Probability", main = "CDF")
+```

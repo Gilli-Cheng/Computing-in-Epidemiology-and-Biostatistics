@@ -1,0 +1,120 @@
+---
+title: "HW7comp"
+author: "Gillian Cheng"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+## Ex 18_1:
+There are 12 complicated crossroads in this city. The numbers of car
+accidents at the 12 crossroads within 1 month are as follows: 5, 5, 6, 0, 1, 2, 4, 4, 3, 5, 7, 10. 
+
+1. Please plot the log-likelihood function for mean number of car accidents within 1 month, lambda.
+
+```{r,echo=FALSE, out.width = "300px"}
+knitr::include_graphics("poissonLL.png")
+```
+
+```{r, fig.align='center',fig.width=3,fig.height=3}
+X <- c(5, 5, 6, 0, 1, 2, 4, 4, 3, 5, 7, 10)
+lambda <- seq(0,10,0.001)
+lambdahat <- mean(X)
+
+loglik <- function(X,p){
+        loglikelihood <- 0
+        for(i in 1:length(X)){
+                loglikelihood <-loglikelihood+ 
+                        log((exp(-lambda)*(lambda^X[i]))/factorial(X[i]))
+        }
+        return(loglikelihood)
+}
+
+fp2 <- loglik(X,lambda)
+plot(lambda,fp2,col=1, type = 'l', lwd = 2) 
+
+abline(v = lambdahat, col = 2, lwd = 2)
+```
+
+
+2. Please solve the maximum likelihood estimate (MLE) of lambda by the Newton-Raphson method.And mark the MLE on the above plot. 
+
+decide the initial value by 0.8
+```{r, fig.align='center', fig.width=4,fig.height=4}
+lambda <- seq(0,10,0.001)
+f <- (-length(X))+sum(X)/lambda
+plot(lambda,f,type = 'l', lwd = 2)
+abline(h = 0, col =2, lwd = 2)
+```
+
+```{r, include=FALSE}
+newtonraphson <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+        x <- x0 # x0: the initial value
+        fx <- ftn(x)
+        iter <- 0
+        while ((abs(fx[1]) > tol) & (iter < max.iter)) {
+                x <- x - fx[1]/fx[2]
+                fx <- ftn(x)
+                iter <- iter + 1
+                cat("At iteration", iter, "value of x is:", x, "\n")
+        }
+        if (abs(fx[1]) > tol) {
+                cat("Algorithm failed to converge\n")
+                return(NULL)
+        } else { # abs(fx[1]) <= tol
+                cat("Algorithm converged\n")
+                return(x)
+        }
+}
+```
+
+define the function as below.
+the root 4.333 is the same from the mean of this dataset.
+```{r}
+ftn2 <- function(lambda) {
+        f <- (-length(X))+sum(X)/lambda
+        #f <- (-10)+36/lambda # f = -n + summation of x*(1/lambda)
+        df <- -(lambda^(-2))*sum(X) # df = -lambda^(-2) summation of x
+        return(c(f, df))
+}
+
+newtonraphson(ftn2, 0.8, 1e-06)
+mean(X)
+```
+
+
+## Ex S5_1 :
+Data: BMIrepeated.csv on NTU COOL (Week 4). Please use “SEX”, “AGE”, “Treatment” as predictors, “BMI3” as response variable, to calculate the log likelihood of this model.
+
+```{r, echo=FALSE, out.width = "300px"}
+knitr::include_graphics("LL.png")
+```
+
+```{r}
+BMI <- read.csv("BMIrepeated.csv", stringsAsFactors = T)
+
+# Constructing design matrix
+X <- cbind(rep(1,length(BMI$BMI3)),BMI$SEX, BMI$Treatment, BMI$AGE)
+
+# Calculating regression coefficients
+beta <- solve(t(X)%*%X)%*%t(X)%*%matrix(BMI$BMI3,ncol = 1)
+
+# Calculating residuals
+re <- BMI$BMI3 - X%*%beta
+
+# estimating sigma hat square
+sigma2 <- sum(re^2)/length(BMI$BMI3)
+
+-(length(BMI$BMI3)/2)*(log(2*pi)+log(sigma2)+1)
+
+# linear model
+model2 <- lm(BMI3 ~ SEX + AGE + Treatment, data = BMI)
+
+# Calculating Log likelihood
+logLik(model2)                                                          
+```
+
+
+

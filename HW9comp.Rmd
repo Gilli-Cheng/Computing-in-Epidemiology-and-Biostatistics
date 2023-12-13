@@ -1,0 +1,83 @@
+---
+title: "HW9comp"
+author: "Gillian Cheng"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+FYI
+
+```{r, echo=FALSE}
+knitr::include_graphics("poisson_linear_regression.png")
+knitr::include_graphics("poisson_linear_regression_logL.png")
+knitr::include_graphics("poisson_linear_regression_logL_secondderivative.png")
+
+```
+
+## Ex 20-4:
+
+1. Please use the Newton-Raphson method to find the maximum likelihood estimate (MLE) of the regression coefficients of poisson regression.
+
+```{r, include=FALSE}
+newtonraphson <- function(ftn, x0, tol = 1e-9, max.iter = 100) {
+        x <- x0        # x0: the initial value
+        fx <- ftn(x)
+        iter <- 0
+        while ((max(abs(fx[[1]])) > tol) & (iter < max.iter)) {
+                x <- x - solve(fx[[2]]) %*% fx[[1]]
+                fx <- ftn(x)
+                iter <- iter + 1
+        }
+        if (max(abs(fx[[1]])) > tol) {
+                cat('Algorithm failed to converge\n')
+                return(NULL)
+        } else {     # max(abs(fx[[1]])) <= tol
+                cat("Algorithm converged\n")
+                return(x)
+        }
+}
+```
+
+```{r}
+rate <- read.csv("rate.csv")
+rate$Age.f <- factor(rate$Age)
+
+# define X and Y
+Y <- rate$Death # 1 by 24
+
+dummy <- diag(1, length(levels(rate$Age.f))-1)
+dummy <- rbind(rep(0,length(levels(rate$Age.f))-1),dummy)
+dummy <- rbind(dummy, dummy)
+
+X <- cbind(rep(1,length(Y)),dummy, ifelse(rate$sex == "m",1,0)) #24 by 13
+
+ftn3 <- function(betacoef){
+        mu <- exp(X%*%betacoef+log(rate$PY/100000))
+        gradient <- t(X)%*%(Y-mu)
+        Hessian <- -t(X)%*%diag(c(mu),length(Y))%*%X
+        logL <- sum(-mu + Y*log(mu)-log(factorial(Y)))
+        return(list(gradient, Hessian, logL))
+}
+
+```
+
+```{r}
+(beta3 <- newtonraphson(ftn3,c(0,0,0,0,0,0,0,0,0,0,0,0,0)))
+cc <- glm(Death ~ Age.f + sex, offset = log(PY/100000), data = rate, family = "poisson")
+
+cc$coefficients
+```
+
+
+2.Please find the variance-covariance matrix for the betas . 
+```{r}
+solve(-ftn3(beta3)[[2]])
+vcov(cc)
+```
+
+3. Please find the log likelihood at the betas . 
+```{r}
+ftn3(beta3)[[3]]
+logLik(cc)
+```
